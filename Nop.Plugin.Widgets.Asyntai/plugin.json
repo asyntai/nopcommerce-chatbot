@@ -1,0 +1,11 @@
+{
+  "Group": "Widgets",
+  "FriendlyName": "Asyntai AI Chatbot",
+  "SystemName": "Widgets.Asyntai",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "Advanced AI s.r.o.",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Widgets.Asyntai.dll",
+  "Description": "Adds the Asyntai AI chat assistant to your store. It answers shoppers from your own products and pages, day and night, in 36 languages, and turns the questions it cannot answer into leads."
+}

@@ -1,0 +1,65 @@
+@model Nop.Plugin.Widgets.Asyntai.Models.ConfigurationModel
+@{
+    Layout = "_ConfigurePlugin";
+}
+
+@await Component.InvokeAsync(typeof(StoreScopeConfigurationViewComponent))
+
+<form asp-controller="WidgetsAsyntai" asp-action="Configure" method="post">
+    <div class="cards-group">
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Plugins.Widgets.Asyntai.Instructions")
+            </div>
+        </div>
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-override-store-checkbox asp-for="WidgetId_OverrideForStore" asp-input="WidgetId" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+                        <nop-label asp-for="WidgetId" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="WidgetId" />
+                        <span asp-validation-for="WidgetId"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-override-store-checkbox asp-for="PassCustomerDetails_OverrideForStore" asp-input="PassCustomerDetails" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+                        <nop-label asp-for="PassCustomerDetails" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="PassCustomerDetails" />
+                        <span asp-validation-for="PassCustomerDetails"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-override-store-checkbox asp-for="HideOnCheckout_OverrideForStore" asp-input="HideOnCheckout" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+                        <nop-label asp-for="HideOnCheckout" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="HideOnCheckout" />
+                        <span asp-validation-for="HideOnCheckout"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-override-store-checkbox asp-for="ScriptUrl_OverrideForStore" asp-input="ScriptUrl" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+                        <nop-label asp-for="ScriptUrl" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ScriptUrl" />
+                        <span asp-validation-for="ScriptUrl"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" name="save" class="btn btn-primary">@T("Admin.Common.Save")</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
