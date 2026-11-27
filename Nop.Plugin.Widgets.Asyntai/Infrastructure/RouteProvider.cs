@@ -20,6 +20,14 @@ public class RouteProvider : BaseRouteProvider, IRouteProvider
         endpointRouteBuilder.MapControllerRoute(name: AsyntaiDefaults.ConfigurationRouteName,
             pattern: "Admin/WidgetsAsyntai/Configure",
             defaults: new { controller = "WidgetsAsyntai", action = "Configure", area = AreaNames.ADMIN });
+
+        endpointRouteBuilder.MapControllerRoute(name: AsyntaiDefaults.ProductFeedRouteName,
+            pattern: AsyntaiDefaults.ProductFeedPath,
+            defaults: new { controller = "AsyntaiFeed", action = "Products" });
+
+        endpointRouteBuilder.MapControllerRoute(name: AsyntaiDefaults.PageFeedRouteName,
+            pattern: AsyntaiDefaults.PageFeedPath,
+            defaults: new { controller = "AsyntaiFeed", action = "Pages" });
     }
 
     /// <summary>

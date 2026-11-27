@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Copyright>Copyright © Advanced AI s.r.o.</Copyright>
     <Company>Advanced AI s.r.o.</Company>
     <Authors>Advanced AI s.r.o.</Authors>

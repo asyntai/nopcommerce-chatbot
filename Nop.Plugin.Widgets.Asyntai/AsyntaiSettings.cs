@@ -28,4 +28,40 @@ public class AsyntaiSettings : ISettings
     /// checkout pages
     /// </summary>
     public bool HideOnCheckout { get; set; }
+
+    /// <summary>
+    /// Gets or sets the email address of the connected Asyntai account
+    /// </summary>
+    public string AccountEmail { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Asyntai may read the products
+    /// and pages of the store
+    /// </summary>
+    public bool FeedEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the secret that signs every feed request
+    /// </summary>
+    public string FeedToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets the secret of a connect that has not finished yet
+    /// </summary>
+    public string PendingToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets the identifier of the connect that is in progress
+    /// </summary>
+    public string ConnectState { get; set; }
+
+    /// <summary>
+    /// Gets or sets when the connect in progress started, in Unix seconds
+    /// </summary>
+    public long ConnectStateAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the store address that was sent to Asyntai at connect
+    /// </summary>
+    public string SiteUrl { get; set; }
 }

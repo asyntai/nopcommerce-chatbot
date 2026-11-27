@@ -8,6 +8,67 @@
 <form asp-controller="WidgetsAsyntai" asp-action="Configure" method="post">
     <div class="cards-group">
         <div class="card card-default">
+            <div class="card-body" id="asyntai-connect"
+                 data-connected="@(Model.Connected ? "1" : "0")"
+                 data-sharing="@(Model.Sharing ? "1" : "0")"
+                 data-has-token="@(Model.HasToken ? "1" : "0")"
+                 data-url-configure="@Url.Action("Configure", "WidgetsAsyntai")"
+                 data-url-prepare="@Url.Action("Prepare", "WidgetsAsyntai")"
+                 data-url-poll="@Url.Action("Poll", "WidgetsAsyntai")"
+                 data-url-share="@Url.Action("Share", "WidgetsAsyntai")"
+                 data-url-status="@Url.Action("Status", "WidgetsAsyntai")"
+                 data-url-disconnect="@Url.Action("Disconnect", "WidgetsAsyntai")"
+                 data-t-waiting="@T("Plugins.Widgets.Asyntai.Connect.Waiting")"
+                 data-t-blocked="@T("Plugins.Widgets.Asyntai.Connect.PopupBlocked")"
+                 data-t-done="@T("Plugins.Widgets.Asyntai.Connect.Done")"
+                 data-t-timeout="@T("Plugins.Widgets.Asyntai.Connect.Expired")"
+                 data-t-failed="@T("Plugins.Widgets.Asyntai.Connect.Unreachable")"
+                 data-t-confirm="@T("Plugins.Widgets.Asyntai.Disconnect.Confirm")"
+                 data-t-needs="@T("Plugins.Widgets.Asyntai.Share.NeedsConnect")"
+                 data-t-reading="@T("Plugins.Widgets.Asyntai.Sync.Reading")"
+                 data-t-count="@T("Plugins.Widgets.Asyntai.Sync.Count")"
+                 data-t-error="@T("Plugins.Widgets.Asyntai.Sync.Error")">
+
+                @if (Model.Connected)
+                {
+                    <p style="font-size: 1.1em;">
+                        <strong>@T("Plugins.Widgets.Asyntai.Connected")</strong>
+                        @if (!string.IsNullOrEmpty(Model.AccountEmail))
+                        {
+                            <span>(@Model.AccountEmail)</span>
+                        }
+                    </p>
+                    <div class="form-group">
+                        <label style="font-weight: normal;">
+                            <input type="checkbox" id="asyntai-share" @(Model.Sharing ? "checked" : "") />
+                            @T("Plugins.Widgets.Asyntai.Connect.Share")
+                        </label>
+                        <div class="text-muted">@T("Plugins.Widgets.Asyntai.Connect.Share.Hint")</div>
+                        <div id="asyntai-sync" class="mt-2" style="display: none;"></div>
+                    </div>
+                    <p>
+                        <a href="@Model.DashboardUrl" target="_blank" rel="noopener" class="btn btn-dark">@T("Plugins.Widgets.Asyntai.OpenDashboard")</a>
+                        <button type="button" id="asyntai-disconnect" class="btn btn-outline-danger">@T("Plugins.Widgets.Asyntai.Disconnect")</button>
+                    </p>
+                }
+                else
+                {
+                    <p style="font-size: 1.1em;">@T("Plugins.Widgets.Asyntai.Connect.Intro")</p>
+                    <div class="form-group">
+                        <label style="font-weight: normal;">
+                            <input type="checkbox" id="asyntai-share-on-connect" checked />
+                            @T("Plugins.Widgets.Asyntai.Connect.Share")
+                        </label>
+                        <div class="text-muted">@T("Plugins.Widgets.Asyntai.Connect.Share.Hint")</div>
+                    </div>
+                    <p>
+                        <button type="button" id="asyntai-get-started" class="btn btn-dark">@T("Plugins.Widgets.Asyntai.Connect.Button")</button>
+                    </p>
+                }
+                <div id="asyntai-message" class="mt-2" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="card card-default">
             <div class="card-body">
                 @T("Plugins.Widgets.Asyntai.Instructions")
             </div>
@@ -63,3 +124,130 @@
         </div>
     </div>
 </form>
+
+<script>
+    $(function () {
+        var box = document.getElementById('asyntai-connect');
+        if (!box) { return; }
+        var d = box.dataset;
+        var message = document.getElementById('asyntai-message');
+
+        function show(text, ok) {
+            message.textContent = text;
+            message.className = 'mt-2 alert ' + (ok ? 'alert-success' : 'alert-danger');
+            message.style.display = text ? 'block' : 'none';
+        }
+
+        //a plain GET: after Save this page is a form answer, and a reload
+        //would send the Save form again
+        function reloadPage() {
+            window.location.href = d.urlConfigure;
+        }
+
+        function post(url, data) {
+            return $.ajax({ url: url, type: 'POST', dataType: 'json', data: addAntiForgeryToken(data || {}) });
+        }
+
+        function poll(state, popup) {
+            //signing up can take a few minutes, so wait for up to 10 minutes
+            var until = Date.now() + 10 * 60 * 1000;
+            var check = function () {
+                if (Date.now() > until) { show(d.tTimeout, false); return; }
+                post(d.urlPoll, { state: state }).done(function (r) {
+                    if (r && r.ok && r.ready) {
+                        show(d.tDone, true);
+                        try { if (popup && !popup.closed) { popup.close(); } } catch (e) { }
+                        setTimeout(reloadPage, 800);
+                        return;
+                    }
+                    if (r && !r.ok) { show(r.error || d.tFailed, false); return; }
+                    setTimeout(check, 2000);
+                }).fail(function () { setTimeout(check, 3000); });
+            };
+            setTimeout(check, 2000);
+        }
+
+        //the window opens on the click itself, so a pop-up blocker lets it through
+        function connect(share, control) {
+            var w = 800, h = 720;
+            var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
+            var x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
+            var popup = window.open('about:blank', 'asyntai_connect',
+                'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=' + w + ',height=' + h + ',top=' + y + ',left=' + x);
+            if (!popup) { show(d.tBlocked, false); return false; }
+            control.disabled = true;
+            post(d.urlPrepare, { share: share }).done(function (r) {
+                if (!r || !r.ok) {
+                    try { popup.close(); } catch (e) { }
+                    control.disabled = false;
+                    show((r && r.error) || d.tFailed, false);
+                    return;
+                }
+                popup.location.href = r.url;
+                show(d.tWaiting, true);
+                poll(r.state, popup);
+            }).fail(function () {
+                try { popup.close(); } catch (e) { }
+                control.disabled = false;
+                show(d.tFailed, false);
+            });
+            return true;
+        }
+
+        var start = document.getElementById('asyntai-get-started');
+        if (start) {
+            start.addEventListener('click', function () {
+                connect(document.getElementById('asyntai-share-on-connect').checked, start);
+            });
+        }
+
+        var shareBox = document.getElementById('asyntai-share');
+        var syncBox = document.getElementById('asyntai-sync');
+
+        function refreshStatus() {
+            if (!syncBox) { return; }
+            if (!shareBox.checked) { syncBox.style.display = 'none'; return; }
+            post(d.urlStatus).done(function (r) {
+                if (!r || !r.hasSync) { syncBox.style.display = 'none'; return; }
+                var text = d.tCount.replace('{0}', r.count);
+                if (r.status === 'syncing' || r.status === 'running' || r.status === 'pending') { text = d.tReading; }
+                else if (r.status === 'failed' && r.error) { text = d.tError + ' ' + r.error; }
+                syncBox.textContent = text;
+                syncBox.style.display = 'block';
+            });
+        }
+
+        if (shareBox) {
+            shareBox.addEventListener('change', function () {
+                var on = shareBox.checked;
+                //no feed token yet (a pasted widget id, or 1.00): sign in once more
+                if (on && d.hasToken !== '1') {
+                    show(d.tNeeds, true);
+                    if (!connect(true, shareBox)) { shareBox.checked = false; }
+                    return;
+                }
+                post(d.urlShare, { enabled: on }).done(function (r) {
+                    if (r && r.needsConnect) {
+                        shareBox.checked = false;
+                        show(d.tNeeds, false);
+                        return;
+                    }
+                    show('', true);
+                    refreshStatus();
+                }).fail(function () {
+                    shareBox.checked = !on;
+                    show(d.tFailed, false);
+                });
+            });
+            refreshStatus();
+        }
+
+        var disconnect = document.getElementById('asyntai-disconnect');
+        if (disconnect) {
+            disconnect.addEventListener('click', function () {
+                if (!confirm(d.tConfirm)) { return; }
+                post(d.urlDisconnect).done(reloadPage);
+            });
+        }
+    });
+</script>
